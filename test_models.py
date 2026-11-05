@@ -85,10 +85,11 @@ class TestVault(unittest.TestCase):
     def test_update(self) -> None:
         entry = PasswordEntry("github", "user", "p")
         eid = self.vault.add(entry)
+        entry.updated_at = datetime.now(timezone.utc) - timedelta(days=1)
         antes = entry.updated_at
         self.assertTrue(self.vault.update(eid, password="nova", ignorado="x"))
         self.assertEqual(entry.password, "nova")
-        self.assertGreaterEqual(entry.updated_at, antes)
+        self.assertGreater(entry.updated_at, antes)
         self.assertEqual(entry.notes, "")
         self.assertFalse(self.vault.update(uuid.uuid4(), site="x"))
 
