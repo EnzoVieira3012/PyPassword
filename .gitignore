@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.mypy_cache/
+
+# segredos do cofre — nunca versionar
+dados.enc
+dados.enc.bak
+chave.key
+salt.bin
+hash.bin
