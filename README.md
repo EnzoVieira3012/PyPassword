@@ -55,18 +55,76 @@ Serialização: `to_dict()` (datetime → ISO 8601) / `from_dict()` (levanta
 Índices em memória: `_by_id` (PK), `_by_site`, `_by_user` (mantidos em
 `add`, `update` e `delete`).
 
+## Criptografia (`crypto.py`)
+
+Cada função é uma "stored procedure": recebe parâmetros, devolve valor, não
+expõe detalhes.
+
+| Função | Algoritmo | Saída |
+| --- | --- | --- |
+| `derivar_chave(senha, salt, dklen=64)` | PBKDF2-HMAC-SHA256, 100k iterações | 64 bytes (32 enc + 32 hmac) |
+| `gerar_chave_fernet(caminho)` | `Fernet.generate_key()` | 44 bytes + arquivo `chave.key` (0o600) |
+| `hash_senha_mestra(senha, salt, caminho)` | SHA-256(senha \|\| salt), 1 iteração | 32 bytes + `hash.bin` |
+| `_dividir_chave_mestra(chave)` | slice `[:32]` / `[32:64]` | `(chave_enc, chave_hmac)` |
+| `encrypt_data(dados, chave)` | Fernet + HMAC-SHA256(ciphertext) | `ciphertext \|\| tag(32)` |
+| `decrypt_data(token, chave)` | HMAC timing-safe → Fernet | dados originais |
+
+Fluxo de chaves:
+
+```
+senha + salt --PBKDF2(100k, 64B)--> chave mestra
+chave mestra --split--> chave_enc(32) + chave_hmac(32)
+dados --Fernet(chave_enc)--> ciphertext --HMAC(chave_hmac)--> tag
+token = ciphertext || tag        (Encrypt-then-MAC)
+```
+
+### Por que 100.000 iterações
+
+SHA-256 puro roda em ~1 µs: um atacante testa bilhões de senhas por segundo.
+PBKDF2 com 100k iterações custa ~50-100 ms por tentativa, ou seja ~10-20/s por
+núcleo — lento o bastante para inviabilizar força bruta e ainda aceitável no
+login (uma vez por sessão). O custo cresce linear com as iterações: aumentar
+para 600k (recomendação OWASP atual) multiplica o tempo por 6 e exige rederivar
+a chave mestra — por isso a constante `ITERACOES_PBKDF2` fica isolada.
+
+### Por que salt de 16 bytes
+
+16 bytes = 128 bits = 2^128 salts possíveis. Um salt único por cofre impede
+rainbow tables: o atacante precisaria pré-calcular uma tabela por salt. É
+aleatório (`secrets.token_bytes(16)`), guardado em `salt.bin` e público por
+natureza — não precisa de sigilo, só de unicidade.
+
+### Por que 0o600 em `chave.key`
+
+`rw-------` = só o owner lê/escreve. Em máquina multi-usuário (Linux/WSL,
+servidor) impede que outro usuário copie a chave e abra o cofre. No Windows o
+`os.chmod` só aplica o bit read-only — a proteção real lá vem das ACLs do
+perfil do usuário.
+
+### `chave.key` nunca vai para o git
+
+`.gitignore` já cobre `chave.key`, `salt.bin`, `hash.bin`, `dados.enc` e
+`dados.enc.bak`. Backup seguro da chave = cópia offline (pendrive/gerenciador
+de senhas) ou repositório privado separado — sem ela o cofre é irrecuperável.
+
+### Encrypt-then-MAC
+
+MAC calculado sobre o *ciphertext*, verificado **antes** de descriptografar.
+MAC-then-Encrypt é vulnerável a padding oracle; Encrypt-and-MAC vaza padrões do
+plaintext. A comparação usa `hmac.compare_digest` (tempo constante).
+
 ## Rodar
 
 ```powershell
-python -m unittest -v test_models
-python -m mypy --strict models.py test_models.py
+python -m unittest -v test_models test_crypto
+python -m mypy --strict models.py crypto.py test_models.py test_crypto.py
 ```
 
 ## Roadmap
 
 - [x] `models.py` — `PasswordEntry` (entidade 3FN)
 - [x] `models.py` — `Vault` (CRUD + índices + container + backup/restore)
-- [ ] `crypto.py` — PBKDF2, Fernet, HMAC
+- [x] `crypto.py` — PBKDF2, Fernet, HMAC (Encrypt-then-MAC)
 - [ ] `storage.py` — save/load atômico, backup versionado
 - [ ] `utils.py` — geração de senha, validação, tabela CLI
 - [ ] `main.py` — menu, autenticação, fluxos
