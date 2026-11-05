@@ -189,6 +189,16 @@ Como a assinatura devolve `(valido, erro)` e não o texto limpo, quem grava cham
 `max(header, maior célula) + 2` e separadores `|` / `-+-`. É a VIEW pública do
 modelo relacional: `id` truncado em 8 chars, senha sempre `***`.
 
+## Instalação
+
+Única dependência externa:
+
+```powershell
+python -m pip install cryptography
+```
+
+Python 3.10+ (usa `X | None` em type hints e `match/case` no `main.py`).
+
 ## Rodar
 
 ```powershell
@@ -203,6 +213,4 @@ python -m mypy --strict models.py crypto.py storage.py utils.py test_models.py t
 - [x] `crypto.py` — PBKDF2, Fernet, HMAC (Encrypt-then-MAC)
 - [x] `storage.py` — save/load atômico, backup/restore versionado
 - [x] `utils.py` — geração de senha, validação, tabela CLI, UX
-- [ ] `storage.py` — save/load atômico, backup versionado
-- [ ] `utils.py` — geração de senha, validação, tabela CLI
 - [ ] `main.py` — menu, autenticação, fluxos
