@@ -164,6 +164,12 @@ def backup_vault() -> str:
         raise FileNotFoundError(f"Vault não existe para backup: {ARQUIVO_VAULT}")
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S-%f")
     destino = f"{PREFIXO_BACKUP}{timestamp}"
+    # Relógio do Windows não garante microssegundo distinto entre duas chamadas
+    # seguidas: sem desempate o segundo backup sobrescreveria o primeiro.
+    desempate = 1
+    while os.path.exists(destino):
+        destino = f"{PREFIXO_BACKUP}{timestamp}-{desempate}"
+        desempate += 1
     shutil.copy2(ARQUIVO_VAULT, destino)  # copy2 preserva mtime
     return destino
 

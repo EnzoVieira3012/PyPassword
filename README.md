@@ -154,11 +154,46 @@ erro --> remove dados.enc.tmp --> re-raise            (ROLLBACK)
 **valida o backup antes de copiar** — um backup corrompido nunca destrói o
 `dados.enc` que ainda estava legível.
 
+## Utilitários (`utils.py`)
+
+| Função | Papel |
+| --- | --- |
+| `gerar_senha_aleatoria(tamanho=16)` | `secrets` (CSPRNG), 4 tipos garantidos, shuffle com `SystemRandom` |
+| `sanitizar_texto(valor)` | remove caracteres de controle e `strip()` |
+| `validar_entrada(site, username, password, notes)` | `(valido, erro)` em cascata |
+| `formatar_saida(entradas)` | tabela ASCII, largura dinâmica, senha `***` |
+| `pausar(msg)` / `limpar_tela()` | UX (Ctrl+C e Ctrl+D propagam) |
+
+### Por que `secrets`, não `random`
+
+`random` é Mersenne Twister: previsível depois de 624 saídas. `secrets` usa
+`os.urandom`, entropia do SO. `secrets.choice` garante 1 caractere de cada tipo;
+`SystemRandom().shuffle` embaralha depois, senão os quatro garantidos ficariam
+sempre nas primeiras posições. Conjuntos: `A-Z`, `a-z`, `0-9` e
+`!@#$%^&*()_+-=[]{}|;:,.<>?` (sem `"`, `'`, `\` e espaço, que quebram em
+formulários e shells).
+
+### Validação
+
+`sanitizar_texto()` aplica `strip()` e remove `\x00-\x08`, `\x0b`, `\x0c`,
+`\x0e-\x1f`, `\x7f` (preserva `\t`, `\n`, `\r`). `validar_entrada()` valida na
+ordem site → usuário → senha → notas e para no primeiro erro. **A senha não é
+sanitizada**: só é checada contra vazio/`strip()` vazio. Alterar a senha
+digitada faria o cofre guardar um valor diferente do que o site espera.
+Como a assinatura devolve `(valido, erro)` e não o texto limpo, quem grava chama
+`sanitizar_texto()` antes de `Vault.add()`.
+
+### Tabela
+
+`formatar_saida()` monta uma matriz linhas × colunas com largura
+`max(header, maior célula) + 2` e separadores `|` / `-+-`. É a VIEW pública do
+modelo relacional: `id` truncado em 8 chars, senha sempre `***`.
+
 ## Rodar
 
 ```powershell
-python -m unittest -v test_models test_crypto test_storage
-python -m mypy --strict models.py crypto.py storage.py test_models.py test_crypto.py test_storage.py
+python -m unittest -v test_models test_crypto test_storage test_utils
+python -m mypy --strict models.py crypto.py storage.py utils.py test_models.py test_crypto.py test_storage.py test_utils.py
 ```
 
 ## Roadmap
@@ -167,6 +202,7 @@ python -m mypy --strict models.py crypto.py storage.py test_models.py test_crypt
 - [x] `models.py` — `Vault` (CRUD + índices + container + backup/restore)
 - [x] `crypto.py` — PBKDF2, Fernet, HMAC (Encrypt-then-MAC)
 - [x] `storage.py` — save/load atômico, backup/restore versionado
+- [x] `utils.py` — geração de senha, validação, tabela CLI, UX
 - [ ] `storage.py` — save/load atômico, backup versionado
 - [ ] `utils.py` — geração de senha, validação, tabela CLI
 - [ ] `main.py` — menu, autenticação, fluxos
