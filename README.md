@@ -113,11 +113,52 @@ MAC calculado sobre o *ciphertext*, verificado **antes** de descriptografar.
 MAC-then-Encrypt é vulnerável a padding oracle; Encrypt-and-MAC vaza padrões do
 plaintext. A comparação usa `hmac.compare_digest` (tempo constante).
 
+## Persistência (`storage.py`)
+
+| Função | Equivalente SQL |
+| --- | --- |
+| `vault_existe()` | `CHECK EXISTS` — decide entre primeira execução e login |
+| `init_vault(chave)` | `CREATE TABLE` + commit inicial |
+| `save_vault(vault, chave)` | `BEGIN TRAN` → serialize → encrypt → atomic write → `COMMIT` |
+| `load_vault(chave)` | `SELECT` com validação de integridade |
+| `backup_vault()` | `BACKUP DATABASE` versionado |
+| `restore_vault(backup, chave)` | `RESTORE DATABASE` (valida antes de sobrescrever) |
+
+Erros: `FileNotFoundError` (sem cofre), `PermissionError` (sem leitura) e
+`VaultCorrompido` (chave errada, arquivo adulterado/truncado ou JSON inválido).
+Os três modos de "não abre" colapsam em uma exceção só porque são
+indistinguíveis para quem chama — em nenhum caso há o que recuperar sem a chave
+ou sem um backup.
+
+### Por que escrita atômica
+
+`save_vault()` grava em `dados.enc.tmp`, chama `flush()` + `os.fsync()` e só
+então `os.replace()` no `dados.enc`. Queda de energia ou crash no meio deixa o
+arquivo antigo intacto e um `.tmp` órfão, sobrescrito na próxima gravação.
+`os.replace` (e não `os.rename`) porque no Windows `rename` falha quando o
+destino já existe. Falha em qualquer etapa remove o temporário e repropaga o
+erro original — o `ROLLBACK` da analogia SQL.
+
+### Fluxo `save_vault`
+
+```
+vault.backup() --JSON UTF-8--> encrypt_data --Encrypt-then-MAC--> dados.enc.tmp
+dados.enc.tmp --fsync--> --os.replace--> dados.enc   (COMMIT)
+erro --> remove dados.enc.tmp --> re-raise            (ROLLBACK)
+```
+
+### Backup versionado
+
+`backup_vault()` copia para `dados.enc.bak.{YYYY-MM-DDTHH-MM-SS-ffffff}`
+(microssegundos para dois backups seguidos não colidirem). `restore_vault()`
+**valida o backup antes de copiar** — um backup corrompido nunca destrói o
+`dados.enc` que ainda estava legível.
+
 ## Rodar
 
 ```powershell
-python -m unittest -v test_models test_crypto
-python -m mypy --strict models.py crypto.py test_models.py test_crypto.py
+python -m unittest -v test_models test_crypto test_storage
+python -m mypy --strict models.py crypto.py storage.py test_models.py test_crypto.py test_storage.py
 ```
 
 ## Roadmap
@@ -125,6 +166,7 @@ python -m mypy --strict models.py crypto.py test_models.py test_crypto.py
 - [x] `models.py` — `PasswordEntry` (entidade 3FN)
 - [x] `models.py` — `Vault` (CRUD + índices + container + backup/restore)
 - [x] `crypto.py` — PBKDF2, Fernet, HMAC (Encrypt-then-MAC)
+- [x] `storage.py` — save/load atômico, backup/restore versionado
 - [ ] `storage.py` — save/load atômico, backup versionado
 - [ ] `utils.py` — geração de senha, validação, tabela CLI
 - [ ] `main.py` — menu, autenticação, fluxos

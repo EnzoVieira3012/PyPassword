@@ -4,7 +4,8 @@ __pycache__/
 
 # segredos do cofre — nunca versionar
 dados.enc
-dados.enc.bak
+dados.enc.tmp
+dados.enc.bak*
 chave.key
 salt.bin
 hash.bin
