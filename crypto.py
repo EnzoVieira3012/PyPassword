@@ -96,7 +96,7 @@ def gerar_chave_fernet(caminho: str | os.PathLike[str] = ARQUIVO_CHAVE) -> bytes
 
 
 def hash_senha_mestra(
-    senha: str, salt: bytes, caminho: str | os.PathLike[str] = ARQUIVO_HASH
+    senha: str, salt: bytes, caminho: str | os.PathLike[str] | None = ARQUIVO_HASH
 ) -> bytes:
     """Calcula SHA-256(senha || salt) e grava em `hash.bin`.
 
@@ -106,7 +106,8 @@ def hash_senha_mestra(
     Args:
         senha: Senha mestra em texto puro.
         salt: Salt de 16 bytes, o mesmo usado em `derivar_chave`.
-        caminho: Onde salvar o hash. Padrão `hash.bin`.
+        caminho: Onde salvar o hash. Padrão `hash.bin`. `None` só calcula,
+            sem tocar no disco (usado para verificar o login).
 
     Returns:
         Hash SHA-256 de 32 bytes.
@@ -117,9 +118,10 @@ def hash_senha_mestra(
     """
     _validar_salt(salt)
     digest = hashlib.sha256(senha.encode("utf-8") + salt).digest()
-    destino = Path(caminho)
-    destino.write_bytes(digest)
-    os.chmod(destino, 0o600)  # ponytail: no Windows só o bit read-only aplica
+    if caminho is not None:
+        destino = Path(caminho)
+        destino.write_bytes(digest)
+        os.chmod(destino, 0o600)  # ponytail: no Windows só o bit read-only aplica
     return digest
 
 
