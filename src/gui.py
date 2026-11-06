@@ -63,6 +63,7 @@ class App(tk.Tk):
             ("Adicionar", self.adicionar),
             ("Editar", self.editar),
             ("Excluir", self.excluir),
+            ("Revelar", self.revelar),
             ("Gerar senha", self.gerar_senha),
             ("Atualizar", self.atualizar),
         ):
@@ -87,6 +88,14 @@ class App(tk.Tk):
             if str(entrada.id).startswith(prefixo):
                 return entrada
         return None
+
+    def revelar(self) -> None:
+        entrada = self._selecionada()
+        if entrada is None:
+            return
+        messagebox.showinfo(
+            "PyPassword", f"Site: {entrada.site}\nUsuario: {entrada.username}\nSenha: {entrada.password}"
+        )
 
     def _perguntar(
         self, titulo: str, rotulo: str, inicial: str = "", oculto: bool = False
