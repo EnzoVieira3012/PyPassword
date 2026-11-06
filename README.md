@@ -219,6 +219,26 @@ python -m mypy --strict models.py crypto.py storage.py utils.py test_models.py t
 ```
 
 
+## Empacotamento
+
+```powershell
+pip install pyinstaller
+pyinstaller --onefile --name pytask --noconfirm pytask.py
+```
+
+Gera `dist/pytask.exe` (~14 MB, Python embutido). Funciona sem Python instalado.
+
+- `pytask.exe` sem argumentos → menu interativo
+- `pytask.exe list` → CLI com subcomando
+
+Artefatos `build/`, `dist/` e `*.spec` ficam no `.gitignore`.
+
+Alternativa sem dependencia (precisa de Python no destino):
+
+```powershell
+python -m zipapp . -m "pytask:main" -o pytask.pyz
+```
+
 ## Testes
 
 `powershell

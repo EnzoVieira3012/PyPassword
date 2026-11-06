@@ -1,11 +1,16 @@
 __pycache__/
 *.py[cod]
 .mypy_cache/
-
-# segredos do cofre — nunca versionar
+.venv/
+venv/
 dados.enc
 dados.enc.tmp
 dados.enc.bak*
 chave.key
 salt.bin
 hash.bin
+
+# empacotamento (PyInstaller)
+build/
+dist/
+*.spec
