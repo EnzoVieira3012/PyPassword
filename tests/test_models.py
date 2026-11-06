@@ -22,7 +22,7 @@ class TestPasswordEntry(unittest.TestCase):
 
     def test_to_dict_iso(self) -> None:
         d = PasswordEntry("s", "u", "p").to_dict()
-        self.assertEqual(len(d), 7)
+        self.assertEqual(len(d), 8)
         self.assertIsInstance(d["id"], str)
         datetime.fromisoformat(d["created_at"])
 
@@ -99,6 +99,30 @@ class TestVault(unittest.TestCase):
         self.assertEqual(self.vault.search("github"), [])
         self.assertEqual(len(self.vault.search("gitlab")), 1)
         self.assertEqual(len(self.vault.search("outro")), 1)
+
+    def test_category_index_e_search(self) -> None:
+        self.vault.add(PasswordEntry("github", "user", "p", category="trabalho"))
+        self.vault.add(PasswordEntry("reddit", "user", "p", category="lazer"))
+        self.assertEqual(len(self.vault.search("trabalho")), 1)
+        self.assertEqual(len(self.vault.search("lazer")), 1)
+        self.assertEqual(len(self.vault.search("a")), 2)
+
+    def test_category_reindexa_no_update(self) -> None:
+        eid = self.vault.add(PasswordEntry("github", "user", "p", category="trabalho"))
+        self.vault.update(eid, category="pessoal")
+        self.assertEqual(self.vault.search("trabalho"), [])
+        self.assertEqual(len(self.vault.search("pessoal")), 1)
+
+    def test_category_roundtrip(self) -> None:
+        entry = PasswordEntry("github", "user", "p", category="trabalho")
+        restaurada = PasswordEntry.from_dict(entry.to_dict())
+        self.assertEqual(restaurada.category, "trabalho")
+
+    def test_category_default_vazio(self) -> None:
+        self.assertEqual(PasswordEntry("github", "user", "p").category, "")
+
+    def test_category_strip(self) -> None:
+        self.assertEqual(PasswordEntry("github", "user", "p", category="  trabalho  ").category, "trabalho")
 
     def test_delete(self) -> None:
         entry = PasswordEntry("github", "user", "p")

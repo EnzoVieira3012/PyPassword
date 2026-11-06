@@ -9,7 +9,7 @@ import unittest
 from io import StringIO
 from unittest import mock
 from datetime import timedelta, timezone, datetime
-from typing import cast
+from typing import cast, Callable, Any, Callable, Any, Callable, Any
 
 from src.main import (
     primeira_execucao,
@@ -30,8 +30,8 @@ class Saida(str):
 
 
 def rodar(
-    funcao: object,
-    *args: object,
+    funcao: Callable[..., Any],
+    *args: Any,
     entradas: list[str] | None = None,
     senhas: list[str] | None = None,
 ) -> Saida:
@@ -106,7 +106,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
         chave = self.criar_cofre()
         vault = load_vault(chave)
         rodar(fluxo_cadastrar, vault, chave,
-              entradas=["github.com", "usuario", "Nota teste"],
+              entradas=["github.com", "usuario", "Nota teste", ""],
               senhas=["SenhaForte123!"])
         self.assertEqual(len(vault), 1)
         entrada = vault.list_all()[0]
@@ -118,7 +118,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
         chave = self.criar_cofre()
         vault = load_vault(chave)
         saida = rodar(fluxo_cadastrar, vault, chave,
-                      entradas=["", "usuario", "nota"],
+                      entradas=["", "usuario", "nota", ""],
                       senhas=["SenhaForte123!"])
         self.assertEqual(len(vault), 0)
         self.assertIn("obrigatório", saida.lower())
@@ -127,7 +127,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
         chave = self.criar_cofre()
         vault = load_vault(chave)
         rodar(fluxo_cadastrar, vault, chave,
-              entradas=["teste.com", "user", ""],
+              entradas=["teste.com", "user", "", ""],
               senhas=["senha"])
         saida = rodar(fluxo_listar, vault)
         self.assertIn("teste.com", saida)
@@ -138,7 +138,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
         chave = self.criar_cofre()
         vault = load_vault(chave)
         rodar(fluxo_cadastrar, vault, chave,
-              entradas=["github.com", "user", ""],
+              entradas=["github.com", "user", "", ""],
               senhas=["senha123"])
         saida = rodar(fluxo_buscar, vault,
                       entradas=["github", ""])
@@ -148,7 +148,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
         chave = self.criar_cofre()
         vault = load_vault(chave)
         rodar(fluxo_cadastrar, vault, chave,
-              entradas=["site.com", "user", "nota"],
+              entradas=["site.com", "user", "nota", ""],
               senhas=["senha"])
         entrada = vault.list_all()[0]
         entrada.updated_at = datetime.now(timezone.utc) - timedelta(days=1)
@@ -157,6 +157,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
                       entradas=[prefixo, "novo-site.com", "", "atualizada", ""],
                       senhas=[""])
         atualizada = vault.get(entrada.id)
+        assert atualizada is not None
         self.assertEqual(atualizada.site, "novo-site.com")
         self.assertEqual(atualizada.username, "user")
 
@@ -164,7 +165,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
         chave = self.criar_cofre()
         vault = load_vault(chave)
         rodar(fluxo_cadastrar, vault, chave,
-              entradas=["site.com", "user", ""],
+              entradas=["site.com", "user", "", ""],
               senhas=["senha"])
         entrada = vault.list_all()[0]
         prefixo = str(entrada.id)[:8]
@@ -176,7 +177,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
         chave = self.criar_cofre()
         vault = load_vault(chave)
         rodar(fluxo_cadastrar, vault, chave,
-              entradas=["site.com", "user", ""],
+              entradas=["site.com", "user", "", ""],
               senhas=["senha"])
         entrada = vault.list_all()[0]
         prefixo = str(entrada.id)[:8]
@@ -184,6 +185,19 @@ class TestIntegracaoCompleta(BaseIntegracao):
                       entradas=[prefixo, "NAO"])
         self.assertEqual(len(vault), 1)
         self.assertIn("cancelada", saida.lower())
+
+    def test_fluxo_cadastrar_com_categoria(self) -> None:
+        chave = self.criar_cofre()
+        vault = load_vault(chave)
+        rodar(fluxo_cadastrar, vault, chave,
+              entradas=["github.com", "user", "nota", "trabalho"],
+              senhas=["senha123"])
+        entrada = vault.list_all()[0]
+        self.assertEqual(entrada.category, "trabalho")
+        saida = rodar(fluxo_listar, vault)
+        self.assertIn("trabalho", saida)
+        self.assertIn("Categoria", saida)
+        self.assertEqual(len(vault.search("trabalho")), 1)
 
     def test_fluxo_gerar_senha_padrao(self) -> None:
         saida = rodar(fluxo_gerar_senha, entradas=[""])
@@ -200,7 +214,7 @@ class TestIntegracaoCompleta(BaseIntegracao):
 
         # cadastrar
         rodar(fluxo_cadastrar, vault, chave,
-              entradas=["google.com", "meuuser", "conta principal"],
+              entradas=["google.com", "meuuser", "conta principal", ""],
               senhas=["MinhaSenh@123"])
         self.assertEqual(len(vault), 1)
 
@@ -220,12 +234,14 @@ class TestIntegracaoCompleta(BaseIntegracao):
               entradas=[prefixo, "gmail.com", "", "atualizada", ""],
               senhas=["NovaSenh@456"])
         atualizada = vault.get(entrada.id)
+        assert atualizada is not None
         self.assertEqual(atualizada.site, "gmail.com")
         self.assertEqual(atualizada.password, "NovaSenh@456")
         self.assertEqual(atualizada.notes, "atualizada")
 
         # excluir
         prefixo = str(atualizada.id)[:8]
+        assert atualizada is not None
         rodar(fluxo_excluir, vault, chave,
               entradas=[prefixo, "CONFIRMO", "CONFIRMO"])
         self.assertEqual(len(vault), 0)

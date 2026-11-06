@@ -44,6 +44,7 @@ dependência transitiva (apenas `id` é PK):
 | `username` | `str` | `strip()` na entrada |
 | `password` | `str` | texto puro só em memória; **nunca** `strip()` |
 | `notes` | `str` | observações |
+| `category` | `str` | categoria/tag livre (indexada) |
 | `created_at` | `datetime` | UTC |
 | `updated_at` | `datetime` | UTC, atualizado pelo "trigger" do `Vault` |
 
@@ -63,7 +64,7 @@ Serialização: `to_dict()` (datetime → ISO 8601) / `from_dict()` (levanta
 | `backup()` / `restore()` | `BACKUP` / `RESTORE` (JSON UTF-8) |
 | `len()`, `in`, `for` | Container Protocol |
 
-Índices em memória: `_by_id` (PK), `_by_site`, `_by_user` (mantidos em
+Índices em memória: `_by_id` (PK), `_by_site`, `_by_user`, `_by_category` (mantidos em
 `add`, `update` e `delete`).
 
 ## Criptografia (`crypto.py`)

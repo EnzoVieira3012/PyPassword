@@ -168,7 +168,7 @@ class TestFluxoCadastrar(BaseMain):
             main.fluxo_cadastrar,
             vault,
             CHAVE,
-            entradas=["  github  ", " user ", " nota "],
+            entradas=["  github  ", " user ", " nota ", ""],
             senhas=["s3nh4"],
         )
         self.assertEqual(len(vault), 1)
@@ -204,7 +204,7 @@ class TestFluxoCadastrar(BaseMain):
             main.fluxo_cadastrar,
             vault,
             CHAVE,
-            entradas=["github", "user", ""],
+            entradas=["github", "user", "", ""],
             senhas=["p"],
         )
         self.assertEqual(len(vault), 1)

@@ -78,7 +78,8 @@ def sanitizar_texto(valor: str) -> str:
 
 
 def validar_entrada(
-    site: str, username: str, password: str, notes: str
+    site: str, username: str, password: str, notes: str = "",
+    category: str = "",
 ) -> tuple[bool, str]:
     """Valida os campos obrigatórios em cascata (site → usuário → senha → notas).
 
@@ -114,6 +115,7 @@ def validar_entrada(
 
 
 def formatar_saida(entradas: list[PasswordEntry]) -> str:
+    """Tabela ASCII com coluna Categoria."""
     """Monta tabela ASCII alinhada a partir da lista de entradas.
 
     Largura de cada coluna = `max(header, maior célula) + 2`. A senha sai
@@ -128,11 +130,11 @@ def formatar_saida(entradas: list[PasswordEntry]) -> str:
     if not entradas:
         return "(vazio)"
 
-    cabecalhos = ["ID", "Site", "Usuário", "Senha", "Observações"]
+    cabecalhos = ["ID", "Site", "Usuário", "Senha", "Categoria", "Observações"]
     # ponytail: len() conta code points. Emoji/ideogramas largos desalinham;
     # trocar por wcwidth se a tabela precisar de CJK.
     linhas = [
-        [str(e.id)[:8], e.site, e.username, "***", e.notes] for e in entradas
+        [str(e.id)[:8], e.site, e.username, "***", e.category, e.notes] for e in entradas
     ]
 
     larguras = [

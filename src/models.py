@@ -14,7 +14,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Iterator
 
-CAMPOS_EDITAVEIS = ("site", "username", "password", "notes")
+CAMPOS_EDITAVEIS = ("site", "username", "password", "notes", "category")
 
 
 class PasswordEntry:
@@ -37,6 +37,7 @@ class PasswordEntry:
         username: str,
         password: str,
         notes: str = "",
+        category: str = "",
         id: uuid.UUID | None = None,
         created_at: datetime | None = None,
         updated_at: datetime | None = None,
@@ -47,6 +48,7 @@ class PasswordEntry:
         self.username = username.strip()
         self.password = password
         self.notes = notes.strip()
+        self.category = category.strip()
         self.created_at = created_at or agora
         self.updated_at = updated_at or agora
 
@@ -62,6 +64,7 @@ class PasswordEntry:
             "username": self.username,
             "password": self.password,
             "notes": self.notes,
+            "category": self.category,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
@@ -87,6 +90,7 @@ class PasswordEntry:
                 username=data["username"],
                 password=data["password"],
                 notes=data.get("notes", ""),
+                category=data.get("category", ""),
                 created_at=datetime.fromisoformat(data["created_at"]),
                 updated_at=datetime.fromisoformat(data["updated_at"]),
             )
@@ -96,8 +100,8 @@ class PasswordEntry:
     def __str__(self) -> str:
         """View de exibição: senha mascarada, resto em colunas alinhadas."""
         return (
-            f"{str(self.id)[:8]} | {self.site:<20} | {self.username:<20} | "
-            f"*** | {self.notes[:30]}"
+            f"{str(self.id)[:8]} | {self.site:<16} | {self.username:<16} | "
+            f"*** | {self.category:<12} | {self.notes[:30]}"
         )
 
 
@@ -117,16 +121,18 @@ class Vault:
         self._by_id: dict[uuid.UUID, PasswordEntry] = {}
         self._by_site: dict[str, list[PasswordEntry]] = {}
         self._by_user: dict[str, list[PasswordEntry]] = {}
+        self._by_category: dict[str, list[PasswordEntry]] = {}
 
     # -- índices -----------------------------------------------------------
     def _index(self, entry: PasswordEntry) -> None:
         self._by_id[entry.id] = entry
         self._by_site.setdefault(entry.site.lower(), []).append(entry)
         self._by_user.setdefault(entry.username.lower(), []).append(entry)
+        self._by_category.setdefault(entry.category.lower(), []).append(entry)
 
     def _unindex(self, entry: PasswordEntry) -> None:
         self._by_id.pop(entry.id, None)
-        for indice in (self._by_site, self._by_user):
+        for indice in (self._by_site, self._by_user, self._by_category):
             for chave in [k for k, v in indice.items() if any(e is entry for e in v)]:
                 indice[chave] = [e for e in indice[chave] if e is not entry]
                 if not indice[chave]:
@@ -179,7 +185,10 @@ class Vault:
         return [
             e
             for e in self._entries
-            if termo in e.site.lower() or termo in e.username.lower()
+            if termo in e.site.lower()
+            or termo in e.username.lower()
+            or termo in e.category.lower()
+            or termo in e.notes.lower()
         ]
 
     def update(self, id: uuid.UUID | str, **campos: Any) -> bool:
@@ -194,13 +203,13 @@ class Vault:
         entry = self.get(id)
         if entry is None:
             return False
-        chaves_antes = (entry.site.lower(), entry.username.lower())
+        chaves_antes = (entry.site.lower(), entry.username.lower(), entry.category.lower())
         for campo, valor in campos.items():
             if campo in CAMPOS_EDITAVEIS:
                 if isinstance(valor, str) and campo != "password":
                     valor = valor.strip()
                 setattr(entry, campo, valor)
-        if (entry.site.lower(), entry.username.lower()) != chaves_antes:
+        if (entry.site.lower(), entry.username.lower(), entry.category.lower()) != chaves_antes:
             self._unindex(entry)
             self._index(entry)
         entry.updated_at = datetime.now(timezone.utc)

@@ -119,15 +119,16 @@ def fluxo_cadastrar(vault: Vault, chave: bytes) -> None:
         return
 
     notes = sanitizar_texto(input("Observações (opcional): "))
+    category = sanitizar_texto(input("Categoria (opcional): "))
 
-    ok, erro = validar_entrada(site, username, password, notes)
+    ok, erro = validar_entrada(site, username, password, notes, category)
     if not ok:
         print(erro)
         pausar()
         return
 
     entrada = PasswordEntry(
-        site=site, username=username, password=password, notes=notes
+        site=site, username=username, password=password, notes=notes, category=category
     )
     entrada_id = vault.add(entrada)
     storage.save_vault(vault, chave)
@@ -225,6 +226,7 @@ def fluxo_editar(vault: Vault, chave: bytes) -> None:
         novos.get("username", entrada.username),
         novos.get("password", entrada.password),
         novos.get("notes", entrada.notes),
+        novos.get("category", entrada.category),
     )
     if not ok:
         print(erro)
