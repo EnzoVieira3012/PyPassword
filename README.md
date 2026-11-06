@@ -206,6 +206,25 @@ python -m unittest -v test_models test_crypto test_storage test_utils
 python -m mypy --strict models.py crypto.py storage.py utils.py test_models.py test_crypto.py test_storage.py test_utils.py
 ```
 
+
+## Testes
+
+`powershell
+python -m unittest test_models test_crypto test_storage test_utils test_main test_integracao
+python -m mypy --strict main.py models.py crypto.py storage.py utils.py test_main.py test_integracao.py
+`
+
+Cobertura: 151 testes (2 skips no Windows para chmod).
+
+## Contribuicao
+
+1. Fork
+2. Branch: git checkout -b feature/nova-funcionalidade
+3. Commit: git commit -m 'feat: descricao'
+4. Push: git push origin feature/nova-funcionalidade
+5. Pull Request
+
+Padroes: type hints obrigatorios, docstrings PEP 257, mypy --strict sem erros, unittest passa 100%.
 ## Roadmap
 
 - [x] `models.py` — `PasswordEntry` (entidade 3FN)
