@@ -133,6 +133,18 @@ def cmd_qr(args: argparse.Namespace) -> None:
     mostrar_qr(f"{entrada.site}\n{entrada.username}\n{entrada.password}")
 
 
+def cmd_show(args: argparse.Namespace) -> None:
+    resultado = _autenticar()
+    if resultado is None:
+        return
+    _, vault = resultado
+    entrada = _buscar_por_prefixo(list(vault), args.id)
+    if entrada is None:
+        print(f"Entrada nao encontrada: {args.id}")
+        return
+    print(entrada.password)
+
+
 def cmd_generate(args: argparse.Namespace) -> None:
     from unittest import mock
     with mock.patch("builtins.input", return_value=""):
@@ -191,6 +203,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_qr = subparsers.add_parser("qr", help="QR code da credencial (celular)")
     p_qr.add_argument("id", help="Prefixo do ID (8 chars)")
     p_qr.set_defaults(func=cmd_qr)
+
+    # show
+    p_show = subparsers.add_parser("show", help="Revelar senha de uma credencial")
+    p_show.add_argument("id", help="Prefixo do ID (8 chars)")
+    p_show.set_defaults(func=cmd_show)
 
     # generate
     p_gen = subparsers.add_parser("generate", help="Gerar senha aleatoria")

@@ -234,6 +234,7 @@ Gera `dist/pypassword.exe` (~14 MB, Python embutido). Funciona sem Python instal
 Pós-curso (sem novas dependências além de `cryptography`/`pyperclip`):
 - GUI: `python -m src.gui` (Tkinter)
 - QR: `python -m src.cli qr <id>` (opcional `qrcode`, sem ela funciona sem gerar)
+- Show: `python -m src.cli show <id>` (revela a senha de uma credencial)
 - Multi-vault: `--vault nome` (arquivos `dados.nome.enc`, `salt.nome.bin`, `hash.nome.bin`) e `vaults`
 - Sync local criptografado: `sync --destino <pasta>` (push) / `sync --pull --origem <pasta>`
 - Backend SQLite criptografado: `src/db.py` (tabela `password_entries`, substituto do sqlcipher sem dependência extra)
