@@ -5,7 +5,7 @@ import unittest
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from models import PasswordEntry, Vault
+from src.models import PasswordEntry, Vault
 
 
 class TestPasswordEntry(unittest.TestCase):

@@ -13,8 +13,8 @@ from pathlib import Path
 
 from cryptography.fernet import Fernet
 
-import crypto
-from crypto import (
+import src.crypto as crypto
+from src.crypto import (
     _dividir_chave_mestra,
     decrypt_data,
     derivar_chave,

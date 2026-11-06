@@ -10,10 +10,10 @@ import sys
 from collections.abc import Iterable
 from pathlib import Path
 
-import storage
-from crypto import ARQUIVO_HASH, derivar_chave, hash_senha_mestra
-from models import PasswordEntry, Vault
-from utils import (
+import src.storage as storage
+from src.crypto import ARQUIVO_HASH, derivar_chave, hash_senha_mestra
+from src.models import PasswordEntry, Vault
+from src.utils import (
     formatar_saida,
     gerar_senha_aleatoria,
     limpar_tela,

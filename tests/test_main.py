@@ -10,10 +10,10 @@ from io import StringIO
 from pathlib import Path
 from unittest import mock
 
-import main
-import storage
-from crypto import ARQUIVO_HASH, derivar_chave
-from models import PasswordEntry, Vault
+import src.main as main
+import src.storage as storage
+from src.crypto import ARQUIVO_HASH, derivar_chave
+from src.models import PasswordEntry, Vault
 
 CHAVE = b"\x01" * 64  # qualquer 64 bytes servem: derivar_chave não é o alvo aqui
 SENHA = "senha mestre"
@@ -33,7 +33,7 @@ def rodar(
 ) -> Saida:
     """Executa `funcao` com input/getpass simulados e captura a saída padrão."""
     entrada = mock.patch("builtins.input", side_effect=entradas or [])
-    senha = mock.patch("main.getpass.getpass", side_effect=senhas or [])
+    senha = mock.patch("src.main.getpass.getpass", side_effect=senhas or [])
     with entrada, senha:
         buffer = StringIO()
         with redirect_stdout(buffer):
@@ -50,7 +50,7 @@ class BaseMain(unittest.TestCase):
         os.chdir(self._tmp.name)
         self.addCleanup(self._tmp.cleanup)
         self.addCleanup(os.chdir, str(self._cwd))
-        for alvo in ("main.limpar_tela", "main.pausar"):
+        for alvo in ("src.main.limpar_tela", "src.main.pausar"):
             patcher = mock.patch(alvo)
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -139,7 +139,7 @@ class TestMenu(BaseMain):
         ]
         mocks = {}
         for alvo in alvos:
-            patcher = mock.patch(f"main.{alvo}")
+            patcher = mock.patch(f"src.main.{alvo}")
             mocks[alvo] = patcher.start()
             self.addCleanup(patcher.stop)
         rodar(main.menu_principal, self.vault(), CHAVE, entradas=["1", "2", "3", "4", "5", "6", "0"])
@@ -147,7 +147,7 @@ class TestMenu(BaseMain):
             mocks[alvo].assert_called_once()
 
     def test_opcao_invalida(self) -> None:
-        with mock.patch("main.pausar") as pausar:
+        with mock.patch("src.main.pausar") as pausar:
             rodar(main.menu_principal, self.vault(), CHAVE, entradas=["9", "0"])
         pausar.assert_called_once()
 
@@ -357,20 +357,20 @@ class TestFluxoGerarSenha(BaseMain):
 
 class TestMain(BaseMain):
     def test_primeira_execucao_abre_menu(self) -> None:
-        with mock.patch("main.menu_principal") as menu:
+        with mock.patch("src.main.menu_principal") as menu:
             rodar(main.main, senhas=[SENHA, SENHA])
         menu.assert_called_once()
         self.assertEqual(len(menu.call_args.args[0]), 0)
 
     def test_login_abre_menu(self) -> None:
         self.criar_cofre()
-        with mock.patch("main.menu_principal") as menu:
+        with mock.patch("src.main.menu_principal") as menu:
             rodar(main.main, senhas=[SENHA])
         menu.assert_called_once()
 
     def test_login_falho_nao_abre_menu(self) -> None:
         self.criar_cofre()
-        with mock.patch("main.menu_principal") as menu:
+        with mock.patch("src.main.menu_principal") as menu:
             with self.assertRaises(SystemExit):
                 rodar(main.main, senhas=["a", "b", "c"])
         menu.assert_not_called()

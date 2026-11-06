@@ -11,7 +11,7 @@ import re
 import secrets
 import string
 
-from models import PasswordEntry
+from src.models import PasswordEntry
 
 MAIUSCULAS = string.ascii_uppercase
 MINUSCULAS = string.ascii_lowercase

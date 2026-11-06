@@ -11,7 +11,7 @@ from unittest import mock
 from datetime import timedelta, timezone, datetime
 from typing import cast
 
-from main import (
+from src.main import (
     primeira_execucao,
     autenticar,
     fluxo_cadastrar,
@@ -21,8 +21,8 @@ from main import (
     fluxo_excluir,
     fluxo_gerar_senha,
 )
-from models import Vault
-from storage import load_vault
+from src.models import Vault
+from src.storage import load_vault
 
 
 class Saida(str):
@@ -42,7 +42,7 @@ def rodar(
     try:
         if senhas is not None:
             it_s = iter(senhas)
-            p = mock.patch("main.getpass.getpass", side_effect=lambda prompt="": next(it_s))
+            p = mock.patch("src.main.getpass.getpass", side_effect=lambda prompt="": next(it_s))
             p.start()
             patchers.append(p)
         if entradas is not None:
@@ -68,9 +68,9 @@ class BaseIntegracao(unittest.TestCase):
         os.chdir(self.tmpdir.name)
         self.addCleanup(os.chdir, self.orig_cwd)
         self.patchers = [
-            mock.patch("main.limpar_tela"),
-            mock.patch("main.pausar"),
-            mock.patch("main.sys.exit", side_effect=lambda code: None),
+            mock.patch("src.main.limpar_tela"),
+            mock.patch("src.main.pausar"),
+            mock.patch("src.main.sys.exit", side_effect=lambda code: None),
         ]
         for p in self.patchers:
             p.start()

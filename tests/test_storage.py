@@ -7,10 +7,10 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-import storage
-from crypto import derivar_chave, encrypt_data
-from models import PasswordEntry, Vault
-from storage import (
+import src.storage as storage
+from src.crypto import derivar_chave, encrypt_data
+from src.models import PasswordEntry, Vault
+from src.storage import (
     ARQUIVO_VAULT,
     VaultCorrompido,
     backup_vault,

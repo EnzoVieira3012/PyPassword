@@ -15,8 +15,8 @@ from datetime import datetime, timezone
 
 from cryptography.fernet import InvalidToken
 
-from crypto import decrypt_data, encrypt_data
-from models import Vault
+from src.crypto import decrypt_data, encrypt_data
+from src.models import Vault
 
 ARQUIVO_VAULT = "dados.enc"
 PREFIXO_BACKUP = "dados.enc.bak."

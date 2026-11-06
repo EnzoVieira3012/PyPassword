@@ -4,8 +4,8 @@ import os
 import unittest
 from unittest import mock
 
-from models import PasswordEntry
-from utils import (
+from src.models import PasswordEntry
+from src.utils import (
     DIGITOS,
     MAIUSCULAS,
     MINUSCULAS,
@@ -46,7 +46,7 @@ class TestGerarSenha(unittest.TestCase):
         self.assertNotEqual(gerar_senha_aleatoria(), gerar_senha_aleatoria())
 
     def test_usa_secrets_nao_random(self) -> None:
-        with mock.patch("utils.secrets.choice", return_value="A") as choice:
+        with mock.patch("src.utils.secrets.choice", return_value="A") as choice:
             gerar_senha_aleatoria(8)
         self.assertEqual(choice.call_count, 8)  # 4 fixos + 4 preenchimentos
 
@@ -162,7 +162,7 @@ class TestUx(unittest.TestCase):
                 pausar()
 
     def test_limpar_tela(self) -> None:
-        with mock.patch("utils.os.system") as system:
+        with mock.patch("src.utils.os.system") as system:
             limpar_tela()
         system.assert_called_once_with("cls" if os.name == "nt" else "clear")
 
