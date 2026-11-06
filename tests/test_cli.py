@@ -38,6 +38,18 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(args.notes, "nota")
         self.assertIsNone(args.password)
 
+    def test_parser_add_category(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            ["add", "--site", "github.com", "--username", "u", "--category", "trabalho"]
+        )
+        self.assertEqual(args.category, "trabalho")
+
+    def test_parser_add_category_default(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["add", "--site", "s", "--username", "u"])
+        self.assertEqual(args.category, "")
+
     def test_parser_list_no_args(self) -> None:
         parser = build_parser()
         args = parser.parse_args(["list"])

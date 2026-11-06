@@ -38,7 +38,8 @@ def cmd_add(args: argparse.Namespace) -> None:
     username = sanitizar_texto(args.username or "")
     password = args.password or ""
     notes = sanitizar_texto(args.notes or "")
-    valido, erro = validar_entrada(site, username, password, notes)
+    category = sanitizar_texto(args.category or "")
+    valido, erro = validar_entrada(site, username, password, notes, category)
     if not valido:
         print(f"Erro: {erro}")
         return
@@ -49,6 +50,7 @@ def cmd_add(args: argparse.Namespace) -> None:
         username=username,
         password=password,
         notes=notes,
+        category=category,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
@@ -108,6 +110,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("--username", required=True, help="Usuario")
     p_add.add_argument("--password", help="Senha (se omitido, gera)")
     p_add.add_argument("--notes", default="", help="Observacoes")
+    p_add.add_argument("--category", default="", help="Categoria/tag")
     p_add.set_defaults(func=cmd_add)
 
     # list
