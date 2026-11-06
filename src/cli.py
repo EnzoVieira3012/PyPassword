@@ -17,7 +17,11 @@ from src.main import (
     fluxo_excluir,
     fluxo_gerar_senha,
 )
+import src.storage as storage
 from src.storage import load_vault, save_vault
+from src.main import _buscar_por_prefixo
+from src.qr import mostrar_qr
+from src.sync import puxar as sync_puxar, sincronizar as sync_push
 from src.utils import sanitizar_texto, validar_entrada
 
 
@@ -91,6 +95,44 @@ def cmd_delete(args: argparse.Namespace) -> None:
     fluxo_excluir(vault, chave)
 
 
+def cmd_sync(args: argparse.Namespace) -> None:
+    if args.pull:
+        resultado = _autenticar()
+        if resultado is None:
+            return
+        chave, _ = resultado
+        try:
+            nomes = sync_puxar(args.destino, chave)
+        except (FileNotFoundError, storage.VaultCorrompido) as exc:
+            print(f"Falha no pull: {exc}")
+            return
+        print(f"Puxado: {', '.join(nomes) if nomes else 'nada'}")
+        return
+    nomes = sync_push(args.destino)
+    print(f"Enviado: {', '.join(nomes) if nomes else 'nada'}")
+
+
+def cmd_vaults(args: argparse.Namespace) -> None:
+    nomes = storage.vaults_disponiveis()
+    if not nomes:
+        print("Nenhum vault encontrado.")
+        return
+    for nome in nomes:
+        print(nome or "(padrao)")
+
+
+def cmd_qr(args: argparse.Namespace) -> None:
+    resultado = _autenticar()
+    if resultado is None:
+        return
+    _, vault = resultado
+    entrada = _buscar_por_prefixo(list(vault), args.id)
+    if entrada is None:
+        print(f"Entrada nao encontrada: {args.id}")
+        return
+    mostrar_qr(f"{entrada.site}\n{entrada.username}\n{entrada.password}")
+
+
 def cmd_generate(args: argparse.Namespace) -> None:
     from unittest import mock
     with mock.patch("builtins.input", return_value=""):
@@ -101,6 +143,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pytask",
         description="Gerenciador de senhas criptografado",
+    )
+    parser.add_argument(
+        "--vault", default="", help="Namespace do cofre (multi-vault)"
     )
     subparsers = parser.add_subparsers(dest="command", help="Comandos disponiveis")
 
@@ -130,6 +175,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_delete = subparsers.add_parser("delete", help="Excluir credencial")
     p_delete.set_defaults(func=cmd_delete)
 
+    # sync
+    p_sync = subparsers.add_parser("sync", help="Sincronizar cofre com uma pasta")
+    p_sync.add_argument("--destino", required=True, help="Pasta de destino/origem")
+    p_sync.add_argument(
+        "--pull", action="store_true", help="Trazer da pasta (default: enviar)"
+    )
+    p_sync.set_defaults(func=cmd_sync)
+
+    # vaults
+    p_vaults = subparsers.add_parser("vaults", help="Listar coffres (namespaces)")
+    p_vaults.set_defaults(func=cmd_vaults)
+
+    # qr
+    p_qr = subparsers.add_parser("qr", help="QR code da credencial (celular)")
+    p_qr.add_argument("id", help="Prefixo do ID (8 chars)")
+    p_qr.set_defaults(func=cmd_qr)
+
     # generate
     p_gen = subparsers.add_parser("generate", help="Gerar senha aleatoria")
     p_gen.set_defaults(func=cmd_generate)
@@ -143,6 +205,7 @@ def main() -> None:
     if not hasattr(args, "func"):
         parser.print_help()
         sys.exit(0)
+    storage.definir_namespace(args.vault)
     args.func(args)
 
 

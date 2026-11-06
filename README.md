@@ -214,8 +214,8 @@ Python 3.10+ (usa `X | None` em type hints e `match/case` no `main.py`).
 ## Rodar
 
 ```powershell
-python -m unittest -v test_models test_crypto test_storage test_utils
-python -m mypy --strict models.py crypto.py storage.py utils.py test_models.py test_crypto.py test_storage.py test_utils.py
+python -m unittest discover -s tests -t .
+python -m mypy --strict src tests pytask.py
 ```
 
 
@@ -231,6 +231,13 @@ Gera `dist/pytask.exe` (~14 MB, Python embutido). Funciona sem Python instalado.
 - `pytask.exe` sem argumentos → menu interativo
 - `pytask.exe list` → CLI com subcomando
 
+Pós-curso (sem novas dependências além de `cryptography`/`pyperclip`):
+- GUI: `python -m src.gui` (Tkinter)
+- QR: `python -m src.cli qr <id>` (opcional `qrcode`, sem ela funciona sem gerar)
+- Multi-vault: `--vault nome` (arquivos `dados.nome.enc`, `salt.nome.bin`, `hash.nome.bin`) e `vaults`
+- Sync local criptografado: `sync --destino <pasta>` (push) / `sync --pull --origem <pasta>`
+- Backend SQLite criptografado: `src/db.py` (tabela `password_entries`, substituto do sqlcipher sem dependência extra)
+
 Artefatos `build/`, `dist/` e `*.spec` ficam no `.gitignore`.
 
 Alternativa sem dependencia (precisa de Python no destino):
@@ -242,11 +249,13 @@ python -m zipapp . -m "pytask:main" -o pytask.pyz
 ## Testes
 
 `powershell
-python -m unittest test_models test_crypto test_storage test_utils test_main test_integracao
-python -m mypy --strict main.py models.py crypto.py storage.py utils.py test_main.py test_integracao.py
+python -m unittest discover -s tests -t .
+python -m mypy --strict src tests pytask.py
+python -m coverage run --source=src -m unittest discover -s tests -t .
+python -m coverage report -m
 `
 
-Cobertura: 151 testes (2 skips no Windows para chmod).
+Cobertura: 202 testes (2 skips no Windows para chmod).
 
 ## Contribuicao
 
@@ -264,4 +273,10 @@ Padroes: type hints obrigatorios, docstrings PEP 257, mypy --strict sem erros, u
 - [x] `crypto.py` — PBKDF2, Fernet, HMAC (Encrypt-then-MAC)
 - [x] `storage.py` — save/load atômico, backup/restore versionado
 - [x] `utils.py` — geração de senha, validação, tabela CLI, UX
-- [ ] `main.py` — menu, autenticação, fluxos
+- [x] `main.py` — menu, autenticação, fluxos
+- [x] `cli.py` — argparse subcomandos
+- [x] `gui.py` — Tkinter
+- [x] `qr.py` — QR code
+- [x] `sync.py` — sync local criptografado
+- [x] `db.py` — backend SQLite criptografado
+- [x] storage multi-vault

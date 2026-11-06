@@ -11,7 +11,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 import src.storage as storage
-from src.crypto import ARQUIVO_HASH, derivar_chave, hash_senha_mestra
+from src.crypto import derivar_chave, hash_senha_mestra
 from src.models import PasswordEntry, Vault
 from src.utils import (
     formatar_saida,
@@ -22,7 +22,6 @@ from src.utils import (
     validar_entrada,
 )
 
-ARQUIVO_SALT = "salt.bin"
 TENTATIVAS_LOGIN = 3
 TAMANHO_MAX_SENHA_GERADA = 128
 
@@ -45,11 +44,11 @@ def primeira_execucao() -> bytes:
         break
 
     salt = secrets.token_bytes(16)
-    Path(ARQUIVO_SALT).write_bytes(salt)
-    os.chmod(ARQUIVO_SALT, 0o600)
+    Path(storage.ARQUIVO_SALT).write_bytes(salt)
+    os.chmod(storage.ARQUIVO_SALT, 0o600)
 
     chave = derivar_chave(senha, salt)
-    hash_senha_mestra(senha, salt)
+    hash_senha_mestra(senha, salt, storage.ARQUIVO_HASH)
     storage.init_vault(chave)
 
     print("Setup concluído. Cofre criado em dados.enc")
@@ -57,9 +56,11 @@ def primeira_execucao() -> bytes:
 
 
 def autenticar(
-    salt_path: str = ARQUIVO_SALT, hash_path: str = ARQUIVO_HASH
+    salt_path: str | None = None, hash_path: str | None = None
 ) -> bytes | None:
     """Login com até 3 tentativas, comparacao timing-safe."""
+    salt_path = salt_path or storage.ARQUIVO_SALT
+    hash_path = hash_path or storage.ARQUIVO_HASH
     try:
         salt = Path(salt_path).read_bytes()
         hash_salvo = Path(hash_path).read_bytes()

@@ -18,8 +18,46 @@ from cryptography.fernet import InvalidToken
 from src.crypto import decrypt_data, encrypt_data
 from src.models import Vault
 
+NAMESPACE = ""
 ARQUIVO_VAULT = "dados.enc"
 PREFIXO_BACKUP = "dados.enc.bak."
+ARQUIVO_SALT = "salt.bin"
+ARQUIVO_HASH = "hash.bin"
+
+
+def definir_namespace(nome: str) -> None:
+    """Troca o conjunto de arquivos do cofre (multi-vault).
+
+    Cada namespace tem vault, salt e hash próprios, logo chave mestra própria.
+    `""` (default) mantém `dados.enc` / `salt.bin` / `hash.bin` do diretório atual.
+
+    Args:
+        nome: Identificador do vault. Vazio = vault padrão.
+    """
+    global NAMESPACE, ARQUIVO_VAULT, PREFIXO_BACKUP, ARQUIVO_SALT, ARQUIVO_HASH
+    nome = nome.strip().lower().replace(" ", "-")
+    sufixo = f".{nome}" if nome else ""
+    NAMESPACE = nome
+    ARQUIVO_VAULT = f"dados{sufixo}.enc"
+    PREFIXO_BACKUP = f"dados{sufixo}.enc.bak."
+    ARQUIVO_SALT = f"salt{sufixo}.bin"
+    ARQUIVO_HASH = f"hash{sufixo}.bin"
+
+
+def vaults_disponiveis() -> list[str]:
+    """Lista namespaces existentes no diretório atual (varre `dados*.enc`)."""
+    nomes = []
+    for arquivo in os.listdir("."):
+        if not (arquivo.startswith("dados") and arquivo.endswith(".enc")):
+            continue
+        if ".bak" in arquivo:
+            continue
+        meio = arquivo[len("dados"):-len(".enc")]
+        if meio == "":
+            nomes.append("")
+        elif meio.startswith("."):
+            nomes.append(meio[1:])
+    return sorted(nomes)
 
 
 class VaultCorrompido(Exception):
