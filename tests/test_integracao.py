@@ -1,4 +1,4 @@
-"""Testes de integracao end-to-end do PyTask (unittest)."""
+"""Testes de integracao end-to-end do PyPassword (unittest)."""
 
 from __future__ import annotations
 

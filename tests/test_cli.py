@@ -218,13 +218,13 @@ class TestCLIComandos(unittest.TestCase):
         self.assertNotIn("bak", saida)
 
     def test_main_dispatch(self) -> None:
-        with mock.patch.object(sys, "argv", ["pytask", "list"]):
+        with mock.patch.object(sys, "argv", ["pypassword", "list"]):
             with mock.patch("src.cli.cmd_list") as listar:
                 cli_main()
         listar.assert_called_once()
 
     def test_main_sem_comando(self) -> None:
-        with mock.patch.object(sys, "argv", ["pytask"]):
+        with mock.patch.object(sys, "argv", ["pypassword"]):
             with self.assertRaises(SystemExit):
                 cli_main()
 

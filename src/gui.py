@@ -1,4 +1,4 @@
-"""Interface grafica Tkinter (stdlib) para o PyTask."""
+"""Interface grafica Tkinter (stdlib) para o PyPassword."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ class App(tk.Tk):
         super().__init__()
         self.vault = vault
         self.chave = chave
-        self.title("PyTask - Gerenciador de Senhas")
+        self.title("PyPassword - Gerenciador de Senhas")
         self.geometry("820x420")
         self._montar()
 
@@ -80,7 +80,7 @@ class App(tk.Tk):
     def _selecionada(self) -> PasswordEntry | None:
         sel = self.tree.selection()
         if not sel:
-            messagebox.showinfo("PyTask", "Selecione uma entrada.")
+            messagebox.showinfo("PyPassword", "Selecione uma entrada.")
             return None
         prefixo = str(self.tree.item(sel[0], "values")[0])
         for entrada in self.vault:
@@ -110,7 +110,7 @@ class App(tk.Tk):
         category = self._perguntar("Adicionar", "Categoria (opcional):", "") or ""
         ok, erro = validar_entrada(site, username, password, notes, category)
         if not ok:
-            messagebox.showerror("PyTask", erro)
+            messagebox.showerror("PyPassword", erro)
             return
         agora = datetime.now(timezone.utc)
         self.vault.add(
@@ -156,7 +156,7 @@ class App(tk.Tk):
             novos.get("password", entrada.password), novos["notes"], novos["category"],
         )
         if not ok:
-            messagebox.showerror("PyTask", erro)
+            messagebox.showerror("PyPassword", erro)
             return
         self.vault.update(entrada.id, **novos)
         save_vault(self.vault, self.chave)
@@ -167,7 +167,7 @@ class App(tk.Tk):
         if entrada is None:
             return
         if not messagebox.askyesno(
-            "PyTask", f"Excluir {entrada.site} ({entrada.username})?\n\nAcao irreversivel."
+            "PyPassword", f"Excluir {entrada.site} ({entrada.username})?\n\nAcao irreversivel."
         ):
             return
         self.vault.delete(entrada.id)
@@ -176,23 +176,23 @@ class App(tk.Tk):
 
     def gerar_senha(self) -> None:
         tamanho = simpledialog.askinteger(
-            "PyTask", "Tamanho da senha (4-128):", initialvalue=16,
+            "PyPassword", "Tamanho da senha (4-128):", initialvalue=16,
             minvalue=4, maxvalue=128, parent=self,
         )
         if tamanho is None:
             return
         senha = gerar_senha_aleatoria(tamanho)
-        messagebox.showinfo("PyTask", f"Senha gerada ({tamanho} chars):\n\n{senha}")
+        messagebox.showinfo("PyPassword", f"Senha gerada ({tamanho} chars):\n\n{senha}")
 
 
 def _primeira_execucao_gui() -> tuple[bytes | None, Vault | None]:
     """Setup inicial: senha mestre 2x, salt, hash, vault vazio."""
-    senha = simpledialog.askstring("PyTask", "Crie a senha mestre:", show="*")
+    senha = simpledialog.askstring("PyPassword", "Crie a senha mestre:", show="*")
     if not senha:
         return None, None
-    confirmacao = simpledialog.askstring("PyTask", "Confirme a senha mestre:", show="*")
+    confirmacao = simpledialog.askstring("PyPassword", "Confirme a senha mestre:", show="*")
     if senha != confirmacao:
-        messagebox.showerror("PyTask", "Senhas nao conferem.")
+        messagebox.showerror("PyPassword", "Senhas nao conferem.")
         return None, None
     salt = secrets.token_bytes(16)
     with open(storage.ARQUIVO_SALT, "wb") as f:
@@ -204,7 +204,7 @@ def _primeira_execucao_gui() -> tuple[bytes | None, Vault | None]:
 
 
 def _login_gui() -> tuple[bytes | None, Vault | None]:
-    senha = simpledialog.askstring("PyTask", "Senha mestra:", show="*")
+    senha = simpledialog.askstring("PyPassword", "Senha mestra:", show="*")
     if not senha:
         return None, None
     try:
@@ -213,13 +213,13 @@ def _login_gui() -> tuple[bytes | None, Vault | None]:
         with open(storage.ARQUIVO_HASH, "rb") as f:
             esperado = f.read()
     except OSError:
-        messagebox.showerror("PyTask", "Arquivos de autenticacao nao encontrados.")
+        messagebox.showerror("PyPassword", "Arquivos de autenticacao nao encontrados.")
         return None, None
     chave = derivar_chave(senha, salt)
     import hmac as _hmac
 
     if not _hmac.compare_digest(hash_senha_mestra(senha, salt, None), esperado):
-        messagebox.showerror("PyTask", "Senha mestra incorreta.")
+        messagebox.showerror("PyPassword", "Senha mestra incorreta.")
         return None, None
     return chave, load_vault(chave)
 

@@ -1,4 +1,4 @@
-# PyTask — Gerenciador de Senhas (CLI)
+# PyPassword — Gerenciador de Senhas (CLI)
 
 Projeto de consolidação dos cursos **Python (9 aulas)**, **Lógica de Programação
 (16 aulas)** e **SQL (9 aulas)**: cofre de senhas local, criptografado, em Python
@@ -215,7 +215,7 @@ Python 3.10+ (usa `X | None` em type hints e `match/case` no `main.py`).
 
 ```powershell
 python -m unittest discover -s tests -t .
-python -m mypy --strict src tests pytask.py
+python -m mypy --strict src tests pypassword.py
 ```
 
 
@@ -223,13 +223,13 @@ python -m mypy --strict src tests pytask.py
 
 ```powershell
 pip install pyinstaller
-pyinstaller --onefile --name pytask --noconfirm pytask.py
+pyinstaller --onefile --name pypassword --noconfirm pypassword.py
 ```
 
-Gera `dist/pytask.exe` (~14 MB, Python embutido). Funciona sem Python instalado.
+Gera `dist/pypassword.exe` (~14 MB, Python embutido). Funciona sem Python instalado.
 
-- `pytask.exe` sem argumentos → menu interativo
-- `pytask.exe list` → CLI com subcomando
+- `pypassword.exe` sem argumentos → menu interativo
+- `pypassword.exe list` → CLI com subcomando
 
 Pós-curso (sem novas dependências além de `cryptography`/`pyperclip`):
 - GUI: `python -m src.gui` (Tkinter)
@@ -243,14 +243,14 @@ Artefatos `build/`, `dist/` e `*.spec` ficam no `.gitignore`.
 Alternativa sem dependencia (precisa de Python no destino):
 
 ```powershell
-python -m zipapp . -m "pytask:main" -o pytask.pyz
+python -m zipapp . -m "pypassword:main" -o pypassword.pyz
 ```
 
 ## Testes
 
 `powershell
 python -m unittest discover -s tests -t .
-python -m mypy --strict src tests pytask.py
+python -m mypy --strict src tests pypassword.py
 python -m coverage run --source=src -m unittest discover -s tests -t .
 python -m coverage report -m
 `

@@ -1,4 +1,4 @@
-"""CLI com argparse para PyTask."""
+"""CLI com argparse para PyPassword."""
 
 from __future__ import annotations
 
@@ -141,7 +141,7 @@ def cmd_generate(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="pytask",
+        prog="pypassword",
         description="Gerenciador de senhas criptografado",
     )
     parser.add_argument(
