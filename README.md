@@ -4,6 +4,17 @@ Projeto de consolidação dos cursos **Python (9 aulas)**, **Lógica de Programa
 (16 aulas)** e **SQL (9 aulas)**: cofre de senhas local, criptografado, em Python
 puro + `cryptography`.
 
+### CLI (nao interativa)
+
+```powershell
+python -m src.cli add --site github.com --username user --password SenhaForte123! --notes "conta principal"
+python -m src.cli list
+python -m src.cli search github
+python -m src.cli edit
+python -m src.cli delete
+python -m src.cli generate
+```
+
 ## Arquitetura (3 camadas + padrões SQL)
 
 ```
